@@ -137,7 +137,22 @@ def sign_up(request):
 
     return render(request, 'all/sign_up.html')
 
+def activate(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        my_user = User.objects.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+        my_user = None
 
+    if my_user is not None and generateToken.check_token(my_user, token):
+        my_user.is_active  = True
+        my_user.save()
+        messages.add_message(request, messages.SUCCESS, "Votre adresse email a été vérifié avec succès.")
+        return render(request, "all/sign_in.html", {"msg": messages.get_messages(request)})
+
+    else:
+        messages.add_message(request,messages.ERROR, 'votre vérifiction d\'adresse a échouer')
+        return render(request,'all/index.html',{'msg':messages.get_messages(request)})
 class Signin(APIView):
     def post(self,request):
         username = request.data.get('username')
@@ -161,27 +176,7 @@ class Signin(APIView):
             return Response({'error': 'Erreur inconnue, reessayer.'},status=status.HTTP_400_BAD_REQUEST)
 
 
-def send(request):
-    if request.method == "POST":
-        email = request.POST['email']
-        destinataires = [email]
-        sujet = 'Réunion de formation'
-        corps = 'Contenu de l\'email'
 
-        """email = MonModeleEmail(sujet, corps, destinataires)
-        email.attach_file('send_mail/email.html')
-        email.send()"""
-
-        context={'nom':"knjsoft"}
-        contenu_html = render_to_string('all/email.html', context)
-        #email.attach_file('/home/knjsoft/programme.zip')
-
-        email = MonModeleEmail(sujet, contenu_html, destinataires)
-        email.content_subtype = "html"
-        #email.attach('email.html', contenu_html, 'text/html')
-        email.send()
-
-    return render(request, 'all/index.html')
 def sign_in(request):
     if request.method == "POST":
         username = request.POST['username']
@@ -221,18 +216,4 @@ def log_out(request):
     return redirect("all:index")
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-def activate(request, uidb64, token):
-    try:
-        uid = force_str(urlsafe_base64_decode(uidb64))
-        my_user = User.objects.get(pk=uid)
-    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
-        my_user = None
 
-    if my_user is not None and generateToken.check_token(my_user, token):
-        my_user.is_active  = True
-        my_user.save()
-        messages.add_message(request,messages.SUCCESS, "You are account is activated you can login by filling the form below.")
-        return render(request,"all/sign_in.html",{'messages':messages.get_messages(request)})
-    else:
-        messages.add_message(request,messages.ERROR, 'Activation failed please try again')
-        return render(request,'all/index.html',{'messages':messages.get_messages(request)})
