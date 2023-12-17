@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>Bienvenue sur THE-GEEK</h1>
+
+<h1>Hello {{ user.username }}</h1>
+
+<p>pour la verification de votre adresse email, cliquer sur le lien ci-dessous!!!</p>
+
+<a href="http://{{domain}}{% url 'activate' uidb64=uid token=token %}"> verifier l'email </a>
+</body>
+</html>

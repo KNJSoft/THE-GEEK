@@ -1,8 +1,11 @@
 import json
 import token
+
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-from .models import Notification
+
+from GEEK import settings
+from .models import Notification, MonModeleEmail
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
@@ -12,6 +15,17 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .fonctions import *
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.encoding import force_bytes, force_str
+from django.shortcuts import redirect, render
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.core.mail import send_mail, EmailMessage
+from django.contrib.sites.shortcuts import get_current_site
+from django.template.loader import render_to_string
+from . tokens import generateToken
+
 # Create your views here.
 
 
@@ -29,7 +43,8 @@ def view_notifications(request):
 
 
 def index(request):
-    pass
+    return render(request,"all/index.html")
+
 
 class Signup(APIView):
     def post(self,request):
@@ -85,63 +100,42 @@ def sign_up(request):
         confirmpwd = request.POST['pwd']
         if User.objects.filter(username=username):
             messages.add_message(request, messages.ERROR, "Ce nom d'utilisateur existe déjà essayer un autre.")
-            return render(request, "shop/sign_up.html", {"erroruser": messages.get_messages(request)})
+            return render(request, "all/sign_up.html", {"msg": messages.get_messages(request)})
         if User.objects.filter(email=email):
             messages.add_message(request, messages.ERROR, 'Cet adresse email est déjà associé à un compte.')
-            return render(request, "shop/sign_up.html", {"mail": messages.get_messages(request)})
+            return render(request, "all/sign_up.html", {"msg": messages.get_messages(request)})
         if len(username) > 10:
             messages.add_message(request, messages.ERROR, "SVP le nom d'utilisateur ne doit pas dépassé 10 caractères.")
-            return render(request, "shop/sign_up.html", {"username10": messages.get_messages(request)})
+            return render(request, "all/sign_up.html", {"msg": messages.get_messages(request)})
         if len(username) < 5:
             messages.add_message(request, messages.ERROR, "SVP le nom d'utilisateur doit avoir au moins 5 caractères.")
-            return render(request, "shop/sign_up.html", {"username5": messages.get_messages(request)})
+            return render(request, "all/sign_up.html", {"msg": messages.get_messages(request)})
 
         if password != confirmpwd:
             messages.add_message(request, messages.ERROR, 'le mot de passe ne correspond pas! ')
-            return render(request, "shop/sign_up.html", {"mdp": messages.get_messages(request)})
-        # try:
-        #     my_user = User.objects.create_user(username, email, password)
-        #     my_user.first_name = firstname
-        #     my_user.last_name = lastname
-        #     my_user.is_active = False
-        #     my_user.save()
-        #     messages.add_message(request, messages.SUCCESS,
-        #                          "Félicitation votre compte à été créer avec succes,vous allez recevoir un mail de confirmation pour activer votre compte")
-        #     # send email when account has been created successfully
-        #     subject = "Confirmation d'email sur SKAB "
-        #     message = "Bienvenue " + my_user.first_name + " " + my_user.last_name + "Merci pour votre inscription sur la meilleur plateforme du e-commerce!!! \nÉquipe S K A B"
-        #
-        #     from_email = settings.EMAIL_HOST_USER
-        #     to_list = [my_user.email]
-        #     send_mail(subject, message, from_email, to_list, fail_silently=False)
-        #
-        #     # send the the confirmation email
-        #     current_site = get_current_site(request)
-        #     email_suject = "vérification de l'adresse email"
-        #     messageConfirm = render_to_string("emailConfimation.html", {
-        #         'name': my_user.first_name,
-        #         'domain': current_site.domain,
-        #         'uid': urlsafe_base64_encode(force_bytes(my_user.pk)),
-        #         'token': generateToken.make_token(my_user)
-        #     })
-        #
-        #     email = EmailMessage(
-        #         email_suject,
-        #         messageConfirm,
-        #         settings.EMAIL_HOST_USER,
-        #         [my_user.email]
-        #     )
-        #
-        #     email.fail_silently = False
-        #     email.send()
-        #     return render(request, "shop/sign_in.html", {"okay": messages.get_messages(request)})
-        #
-        # except:
-        #     messages.add_message(request, messages.WARNING,
-        #                          "Le mail n'à pas éte envoyé,contactez l'un des administrateur pour activer votre compte")
-        #     return render(request, "shop/sign_up.html", {"warning": messages.get_messages(request)})
+            return render(request, "all/sign_up.html", {"msg": messages.get_messages(request)})
+        my_user = User.objects.create_user(username, email, password)
+        my_user.first_name = firstname
+        my_user.last_name = lastname
+        my_user.is_active = False
+        my_user.save()
+        current_site = get_current_site(request)
+        destinataires = [my_user.email,]
+        sujet = 'Confirmation de votre email'
+        # corps = 'Contenu de l\'email'
 
-    return render(request, 'shop/sign_up.html')
+        context = {
+            'user': my_user,
+            'domain': current_site.domain,
+            'uid': urlsafe_base64_encode(force_bytes(my_user.pk)),
+            'token': generateToken.make_token(my_user)
+        }
+        contenu_html = render_to_string('all/emailConfimation.html', context)
+        email = MonModeleEmail(sujet, contenu_html, destinataires)
+        email.content_subtype = "html"
+        email.send()
+
+    return render(request, 'all/sign_up.html')
 
 
 class Signin(APIView):
@@ -166,6 +160,28 @@ class Signin(APIView):
         else:
             return Response({'error': 'Erreur inconnue, reessayer.'},status=status.HTTP_400_BAD_REQUEST)
 
+
+def send(request):
+    if request.method == "POST":
+        email = request.POST['email']
+        destinataires = [email]
+        sujet = 'Réunion de formation'
+        corps = 'Contenu de l\'email'
+
+        """email = MonModeleEmail(sujet, corps, destinataires)
+        email.attach_file('send_mail/email.html')
+        email.send()"""
+
+        context={'nom':"knjsoft"}
+        contenu_html = render_to_string('all/email.html', context)
+        #email.attach_file('/home/knjsoft/programme.zip')
+
+        email = MonModeleEmail(sujet, contenu_html, destinataires)
+        email.content_subtype = "html"
+        #email.attach('email.html', contenu_html, 'text/html')
+        email.send()
+
+    return render(request, 'all/index.html')
 def sign_in(request):
     if request.method == "POST":
         username = request.POST['username']
@@ -202,4 +218,21 @@ def notification(request):
 
 def log_out(request):
     logout(request)
-    return redirect("shop:index")
+    return redirect("all:index")
+
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+def activate(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        my_user = User.objects.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+        my_user = None
+
+    if my_user is not None and generateToken.check_token(my_user, token):
+        my_user.is_active  = True
+        my_user.save()
+        messages.add_message(request,messages.SUCCESS, "You are account is activated you can login by filling the form below.")
+        return render(request,"all/sign_in.html",{'messages':messages.get_messages(request)})
+    else:
+        messages.add_message(request,messages.ERROR, 'Activation failed please try again')
+        return render(request,'all/index.html',{'messages':messages.get_messages(request)})

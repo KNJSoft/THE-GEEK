@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+from django.core.mail import EmailMessage
 
 class Categorie(models.Model):
     nom=models.CharField(max_length=50)
@@ -40,3 +40,8 @@ class Notification(models.Model):
         self.is_read = True
         self.save()
 
+
+class MonModeleEmail(EmailMessage):
+    def __init__(self, sujet, corps, destinataires):
+        super().__init__(sujet, corps, 'knjprod@gmail.com', destinataires)
+        self.content_subtype = 'html'
