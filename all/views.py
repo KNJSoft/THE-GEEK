@@ -79,10 +79,26 @@ class Signup(APIView):
             return Response({'error': 'Cet adresse email est déjà associé à un compte.'},
                             status=status.HTTP_400_BAD_REQUEST)
         try:
-            user=User.objects.create_user(username=username,email=email, password=password)
-            user.first_name=prenom
-            user.last_name=nom
-            user.save()
+            my_user = User.objects.create_user(username, email, password)
+            my_user.first_name = prenom
+            my_user.last_name = nom
+            my_user.is_active = False
+            my_user.save()
+            current_site = get_current_site(request)
+            destinataires = [my_user.email, ]
+            sujet = 'Confirmation de votre email'
+            # corps = 'Contenu de l\'email'
+
+            context = {
+                'user': my_user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(my_user.pk)),
+                'token': generateToken.make_token(my_user)
+            }
+            contenu_html = render_to_string('all/emailConfimation.html', context)
+            email = MonModeleEmail(sujet, contenu_html, destinataires)
+            email.content_subtype = "html"
+            email.send()
 
         except:
             return Response({'error':"Erreur inconnue, reessayer"},
