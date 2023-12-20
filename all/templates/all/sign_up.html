@@ -13,6 +13,7 @@
     <link href="{% static 'all/css/bootstrap.min.css' %}" rel="stylesheet">
     <link rel="canonical" href="https://getbootstrap.com/docs/5.3/examples/navbars/">
     <link rel="stylesheet" href="{% static 'all/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'all/css/jquery-ui.min.css' %}">
 <style>
   :root {
   --bgcolor:#417690;
@@ -72,7 +73,7 @@
     <h1 class="h3 mb-3 fw-normal">Inscription</h1>
 
     <div class="form-floating mb-2">
-      <input type="text" required name="username" class="form-control"  placeholder="knjsoft">
+      <input type="text" required name="username" id="uid" class="form-control"  placeholder="knjsoft">
       <label>Nom d'utilisateur</label>
     </div>
       <div class="form-floating mb-2">
@@ -84,7 +85,7 @@
       <label>Nom</label>
     </div>
     <div class="form-floating mb-2">
-      <input type="text" required name="email" class="form-control"  placeholder="knjsoft@gmail.fr">
+      <input type="email" required id="uemail" name="email" class="form-control"  placeholder="knjsoft@gmail.fr">
       <label>E-mail</label>
     </div>
     <div class="form-floating">
@@ -97,8 +98,35 @@
     </div>
 
 
-    <button class="btn btn-primary w-100 py-2" type="submit" style="background-color:var(--bgcolor)">S'Inscrir</button>
+    <button class="btn btn-primary w-100 py-2" id="btnjs" disabled type="submit" style="background-color:var(--bgcolor)">S'Inscrir</button>
   </form>
+  <script src="{% static 'all/js/jquery-3.6.0.js' %}"></script>
+  <script>
+    $(document).ready(function() {
+      function verify_user() {
+        var username=$('#uid').val();
+        var email=$('#uemail').val();
+        $.ajax({
+          url: "{% url 'verify' %}",
+          data: {"username":username,"email":email},
+          dataType: 'json',
+          success: function(data) {
+            //console.log(data.existe)
+            if (data.existe) {
+              //username existe
+              $('#btnjs').prop('disabled',true);
+            } else {
+              // username disponible
+              $('#btnjs').prop('disabled',false);
+            }
+          }
+        });
+      }
+      // appeler la fonction de verification a chaque modification
+      $('#uid').on('input',verify_user);
+      $('#uemail').on('input',verify_user);
+    });
+  </script>
 </main>
 
 

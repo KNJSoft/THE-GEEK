@@ -2,7 +2,9 @@ import json
 import token
 
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import render
+from django.views.decorators.http import require_GET
 
 from GEEK import settings
 from .models import Notification, MonModeleEmail
@@ -153,6 +155,25 @@ def sign_up(request):
 
     return render(request, 'all/sign_up.html')
 
+@require_GET
+def verify(request):
+    username=request.GET.get('username')
+    email=request.GET.get('email')
+    if User.objects.filter(username=username).exists() and User.objects.filter(email=email).exists():
+
+        data={
+            "existe": True
+        }
+    elif User.objects.filter(username=username).exists() or User.objects.filter(email=email).exists():
+        data = {
+            "existe": True
+        }
+    else:
+        data = {
+            "existe": False
+        }
+    return JsonResponse(data)
+
 def activate(request, uidb64, token):
     try:
         uid = force_str(urlsafe_base64_decode(uidb64))
@@ -230,6 +251,9 @@ def notification(request):
 def log_out(request):
     logout(request)
     return redirect("all:index")
+# erreur 404
+def erreur_404(request,exception):
+    return render(request,"all/404.html",status=404)
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
