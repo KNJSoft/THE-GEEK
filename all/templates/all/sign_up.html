@@ -16,12 +16,12 @@
     <link rel="stylesheet" href="{% static 'all/css/jquery-ui.min.css' %}">
 <style>
   :root {
-  --bgcolor:#417690;
-  --tcolor:#E6D461;
+  --bgcolor:#1f0237;
+  --tcolor:#fff;
   }
 </style>
   </head>
-  <body>
+  <body style="background-color:#09010f;">
   <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
   <symbol id="facebook" viewBox="0 0 16 16">
     <title>Facebook</title>
@@ -66,8 +66,11 @@
 
 <main class="form-signin w-100 m-auto">
   {% for SMS in msg %}
-      <div class="alert alert-{{ auth.tags }} bg-danger"> {{ SMS }}</div>
-   {% endfor %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      {{ SMS }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endfor %}
   <form method="post">
     {% csrf_token %}
     <h1 class="h3 mb-3 fw-normal">Inscription</h1>
@@ -98,7 +101,7 @@
     </div>
 
 
-    <button class="btn btn-primary w-100 py-2" id="btnjs" disabled type="submit" style="background-color:var(--bgcolor)">S'Inscrir</button>
+    <button class="btn border-0 btn-primary w-100 py-2" id="btnjs" disabled type="submit" style="background-color:var(--bgcolor)">S'Inscrir</button>
   </form>
   <script src="{% static 'all/js/jquery-3.6.0.js' %}"></script>
   <script>

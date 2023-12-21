@@ -139,7 +139,7 @@ def sign_up(request):
         my_user.save()
         current_site = get_current_site(request)
         destinataires = [my_user.email,]
-        sujet = 'Confirmation de votre email'
+        sujet = 'Activation de votre compte-THE-GEEK'
         # corps = 'Contenu de l\'email'
 
         context = {
@@ -151,20 +151,32 @@ def sign_up(request):
         contenu_html = render_to_string('all/emailConfimation.html', context)
         email = MonModeleEmail(sujet, contenu_html, destinataires)
         email.content_subtype = "html"
-        email.send()
+        try:
+            email.send()
+        except:
+            messages.add_message(request, messages.ERROR, "Erreur inconnue, reessayer.")
+            return render(request, "all/sign_up.html", {"msg": messages.get_messages(request)})
 
     return render(request, 'all/sign_up.html')
 
 @require_GET
 def verify(request):
-    username=request.GET.get('username')
-    email=request.GET.get('email')
+    username=request.GET.get('username',None)
+    email=request.GET.get('email',None)
     if User.objects.filter(username=username).exists() and User.objects.filter(email=email).exists():
 
         data={
             "existe": True
         }
     elif User.objects.filter(username=username).exists() or User.objects.filter(email=email).exists():
+        data = {
+            "existe": True
+        }
+    elif username=="" and email=="" :
+        data = {
+            "existe": True
+        }
+    elif username=="" or email=="" :
         data = {
             "existe": True
         }
@@ -254,6 +266,7 @@ def log_out(request):
 # erreur 404
 def erreur_404(request,exception):
     return render(request,"all/404.html",status=404)
-
+def email(request):
+    return render(request, "all/email.html")
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
