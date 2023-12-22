@@ -86,6 +86,9 @@ class Signup(APIView):
             my_user.last_name = nom
             my_user.is_active = False
             my_user.save()
+            message = f"Salut {username} bienvenue sur THE-GEEK, la nouvelle plateforme du E-learning."
+            notification = Notification(user=my_user, message=message, is_read=False)
+            notification.save()
             current_site = get_current_site(request)
             destinataires = [my_user.email, ]
             sujet = 'Confirmation de votre email'
@@ -137,6 +140,9 @@ def sign_up(request):
         my_user.last_name = lastname
         my_user.is_active = False
         my_user.save()
+        message=f"Salut {username} bienvenue sur THE-GEEK, la nouvelle plateforme du E-learning."
+        notification=Notification(user=my_user,message=message,is_read=False)
+        notification.save()
         current_site = get_current_site(request)
         destinataires = [my_user.email,]
         sujet = 'Activation de votre compte-THE-GEEK'
@@ -196,6 +202,9 @@ def activate(request, uidb64, token):
     if my_user is not None and generateToken.check_token(my_user, token):
         my_user.is_active  = True
         my_user.save()
+        message = f"Salut {my_user.username} bienvenue sur THE-GEEK, votre adresse e-mail a été vérifiée avec succès."
+        notification = Notification(user=my_user, message=message, is_read=False)
+        notification.save()
         messages.add_message(request, messages.SUCCESS, "Votre adresse email a été vérifié avec succès.")
         return render(request, "all/sign_in.html", {"msg": messages.get_messages(request)})
 
