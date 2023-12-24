@@ -8,5 +8,8 @@ urlpatterns = [
     path('signup/',views.sign_up,name="signup"),
     path('verify/',views.verify,name="verify"),
     path('email/',views.email,name='email'),
+    path('messages/',views.notification,name="notification"),
+    path('profile/',views.profile,name='profile'),
     path('activate/<str:uidb64>/<str:token>/',views.activate,name="activate"),
+    path('logout/',views.log_out,name='logout')
 ]

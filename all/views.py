@@ -1,17 +1,9 @@
-import json
-import token
-
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
-from GEEK import settings
 from .models import Notification, MonModeleEmail
-from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
-from django.shortcuts import render, redirect
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -41,7 +33,7 @@ def create_notification(request, message):
 @login_required
 def view_notifications(request):
     notifications = Notification.objects.filter(user=request.user, is_read=False)
-    return render(request, 'notifications.html', {'notifications': notifications})
+    return render(request, 'all/notification.html', {'notifications': notifications})
 
 
 def index(request):
@@ -133,6 +125,7 @@ def sign_up(request):
             return render(request, "all/sign_up.html", {"msg": messages.get_messages(request)})
 
         if password != confirmpwd:
+
             messages.add_message(request, messages.ERROR, 'le mot de passe ne correspond pas! ')
             return render(request, "all/sign_up.html", {"msg": messages.get_messages(request)})
         my_user = User.objects.create_user(username, email, password)
@@ -262,13 +255,37 @@ def sign_in(request):
 
 
 
-
+# @login_required
 def notification(request):
-    pass
+    context={
+
+    }
+    return render(request,'all/notification.html',context=context)
 
 
 
-
+@login_required
+def profile(request):
+    if request.user.is_authenticated:
+        if request.method == "POST":
+            username = request.POST['username']
+            firstname = request.POST['prenom']
+            lastname = request.POST['nom']
+            email = request.POST['email']
+            password = request.POST['mdp']
+            confirmpwd = request.POST['pwd']
+            user = User.objects.get(username=username)
+            user.first_name = firstname
+            user.last_name = lastname
+            user.email = email
+            user.save()
+            if password == confirmpwd:
+                user.password = password
+                user.save()
+            return redirect('profile')
+        return render(request, 'all/profile.html')
+    else:
+        return redirect('connexion')
 def log_out(request):
     logout(request)
     return redirect("all:index")

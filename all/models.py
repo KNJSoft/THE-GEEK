@@ -7,6 +7,8 @@ class Categorie(models.Model):
     description=models.TextField()
     date=models.DateTimeField(auto_now_add=True)
     deleted = models.BooleanField(default=False)
+    def __str__(self):
+        return self.nom
 
 class Cour(models.Model):
     nom = models.CharField(max_length=80)
@@ -14,6 +16,8 @@ class Cour(models.Model):
     categorie=models.ForeignKey(Categorie,on_delete=models.CASCADE)
     date = models.DateTimeField(auto_now_add=True)
     deleted = models.BooleanField(default=False)
+    def __str__(self):
+        return self.nom
 
 
 class Lecon(models.Model):
@@ -30,6 +34,8 @@ class Lecon(models.Model):
     video = models.ImageField(upload_to='videos/')
     date = models.DateTimeField(auto_now_add=True)
     deleted=models.BooleanField(default=False)
+    def __str__(self):
+        return self.titre
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     message = models.CharField(max_length=255)
