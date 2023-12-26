@@ -22,19 +22,19 @@ from . tokens import generateToken
 
 # Create your views here.
 
-
-@login_required
-def create_notification(request, message):
-    notification = Notification(user=request.user, message=message)
-    notification.save()
-    # Code supplémentaire pour envoyer la notification en push, par exemple en utilisant Django Channels
-    return render(request, 'notification.html', {'notification': notification})
-
-@login_required
-def view_notifications(request):
-    notifications = Notification.objects.filter(user=request.user, is_read=False)
-    return render(request, 'all/notification.html', {'notifications': notifications})
-
+#
+# @login_required
+# def create_notification(request, message):
+#     notification = Notification(user=request.user, message=message)
+#     notification.save()
+#     # Code supplémentaire pour envoyer la notification en push, par exemple en utilisant Django Channels
+#     return render(request, 'notification.html', {'notification': notification})
+#
+# @login_required
+# def view_notifications(request):
+#     notifications = Notification.objects.filter(user=request.user, is_read=False)
+#     return render(request, 'all/notification.html', {'notifications': notifications})
+#
 
 def index(request):
     return render(request,"all/index.html")
@@ -257,10 +257,12 @@ def sign_in(request):
 
 # @login_required
 def notification(request):
-    context={
 
+    notifications = Notification.objects.filter(user=request.user, is_read=False)
+    context = {
+        'notifications': notifications,
     }
-    return render(request,'all/notification.html',context=context)
+    return render(request, 'all/notification.html', context)
 
 
 
