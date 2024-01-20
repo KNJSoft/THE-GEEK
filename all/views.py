@@ -37,7 +37,7 @@ from . tokens import generateToken
 #
 
 def index(request):
-    return render(request,"all/index.html")
+    return render(request,"all/index2.html")
 
 
 class Signup(APIView):
