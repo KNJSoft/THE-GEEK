@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
 
-class Categorie(models.Model):
+'''class Categorie(models.Model):
     nom=models.CharField(max_length=50)
     description=models.TextField()
     date=models.DateTimeField(auto_now_add=True)
@@ -35,7 +35,94 @@ class Lecon(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     deleted=models.BooleanField(default=False)
     def __str__(self):
-        return self.titre
+        return self.titre'''
+
+class Categorie(models.Model):
+    titre=models.CharField(max_length=50)
+    description=models.TextField()
+    date_creation=models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return self.nom
+class Cours(models.Model):
+    diff=(
+        ('F','Facile'),
+        ('M','Moyenne'),
+        ('D','Difficile')
+    )
+    titre=models.CharField(max_length=200)
+    description=models.TextField()
+    categorie=models.ForeignKey(Categorie,on_delete=models.PROTECT)
+    date_creation = models.DateTimeField(auto_now_add=True)
+    instructeur=models.ForeignKey(User,on_delete=models.PROTECT)
+    difficulte=models.CharField(max_length=1,choices=diff)
+    duree_cours = models.TimeField()
+    image_cours=models.ImageField(upload_to='media/images')
+    type=models.CharField()
+
+    class Meta:
+        verbode_name_plural="Cours"
+
+class Ressource(models.Model):
+    types=(('PDF','fichiers pdf'),
+           ('IMG','fichiers images'),
+           ('MP4','fichiers video'),
+           ('TXT','texte'),
+           
+        )
+
+    titre=models.CharField(max_length=100)
+    cours=models.ForeignKey(Cours,on_delete=models.PROTECT)
+    type=models.CharField(max_length=3,choices=types)
+    url_ressource=models.FileField(upload_to='media/ressources')
+
+class Progression(models.Model):
+    user=models.ForeignKey(User,on_delete=models.PROTECT)
+    cours=models.ForeignKey(Cours,on_delete=models.CASCADE)
+    date_debut=models.DateTimeField(auto_now_add=True)
+    date_fin=models.DateTimeField()
+    Score=models.IntegerField(default=0)
+
+class Badge(models.Model):
+    nom=models.CharField(max_length=50)
+    description=models.TextField()
+    image=models.ImageField(upload_to='media/images')
+
+    '''@property
+    def imageUrl(self):
+        try:
+            url = self.image.url
+        except:
+            url = ""
+        return url'''
+
+class Competence(models.Model):
+    badge=models.ForeignKey(Badge,on_delete=models.PROTECT)
+    user=models.ForeignKey(User,on_delete=models.PROTECT)
+
+class Quiz(models.Model):
+    titre=models.CharField(max_length=50)
+    cours=models.ForeignKey(Cours,on_delete=models.PROTECT)
+    description=models.TextField()
+    instructeur = models.ForeignKey(User, on_delete=models.PROTECT)
+
+class Question(models.Model):
+    titre=models.TextField()
+    quiz=models.ForeignKey(Quiz,on_delete=models.PROTECT)
+
+class Choix(models.Model):
+    question=models.ForeignKey(Question,on_delete=models.PROTECT)
+    titre=models.TextField()
+    class Meta:
+        verbose_name_plural='Choix'
+
+class Reponse(models.Model):
+    question=models.ForeignKey(Question,on_delete=models.PROTECT)
+    choix=models.ForeignKey(Choix,on_delete=models.PROTECT)
+    correcte=models.BooleanField(default=True)
+class ReponseUser(models.Model):
+    user=models.ForeignKey(User,on_delete=models.PROTECT)
+    question=models.ForeignKey(Question,on_delete=models.PROTECT)
+    choix=models.ForeignKey(Choix,on_delete=models.PROTECT)
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     message = models.CharField(max_length=255)
