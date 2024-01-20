@@ -43,12 +43,12 @@ def index(request):
 class Signup(APIView):
     def post(self,request):
         username=request.data.get('username')
-        nom = request.data.get('nom')
-        prenom = request.data.get('prenom')
+        #nom = request.data.get('nom')
+        #prenom = request.data.get('prenom')
         email = request.data.get('email')
         password = request.data.get('password')
         cpassword = request.data.get('cpassword')
-        if not username or not nom or not prenom or not email or not password or not cpassword:
+        if not username or not  email or not password or not cpassword:
             return Response({'error':'les champs sont obligatoire'},
                             status=status.HTTP_400_BAD_REQUEST)
         if len(username) > 10:
@@ -74,13 +74,14 @@ class Signup(APIView):
                             status=status.HTTP_400_BAD_REQUEST)
         try:
             my_user = User.objects.create_user(username, email, password)
-            my_user.first_name = prenom
-            my_user.last_name = nom
+            # my_user.first_name = prenom
+            # my_user.last_name = nom
             my_user.is_active = False
             my_user.save()
             message = f"Salut {username} bienvenue sur THE-GEEK, la nouvelle plateforme du E-learning."
             notification = Notification(user=my_user, message=message, is_read=False)
             notification.save()
+            # send mail confirm
             current_site = get_current_site(request)
             destinataires = [my_user.email, ]
             sujet = 'Confirmation de votre email'
