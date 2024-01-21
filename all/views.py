@@ -49,15 +49,18 @@ class Signup(APIView):
         password = request.data.get('password')
         cpassword = request.data.get('cpassword')
         if not username or not  email or not password or not cpassword:
+            print('not values')
             return Response({'error':'les champs sont obligatoire'},
                             status=status.HTTP_400_BAD_REQUEST)
         if len(username) > 10:
+            print(10)
             return Response({'error': "SVP le nom d'utilisateur ne doit pas dépassé 10 caractères."},
                             status=status.HTTP_400_BAD_REQUEST)
         if len(username) < 5:
+            print(5)
             return Response({'error': "SVP le nom d'utilisateur doit avoir au moins 5 caractères."},
                             status=status.HTTP_400_BAD_REQUEST)
-        if password <12:
+        if len(password) <12:
             return Response({'error': 'le mot de passe doit avoir au moins 12 caracteres'},
                             status=status.HTTP_400_BAD_REQUEST)
         if password_verify(password):
@@ -99,7 +102,7 @@ class Signup(APIView):
             email.send()
 
         except:
-            return Response({'error':"Erreur inconnue, reessayer"},
+            return Response({'msg':"Erreur inconnue, reessayer"},
                             status=status.HTTP_400_BAD_REQUEST)
         return Response({'msg': 'INSCRIPTION REUISSI'},
                         status=status.HTTP_201_CREATED)
@@ -205,6 +208,8 @@ def activate(request, uidb64, token):
     else:
         messages.add_message(request,messages.ERROR, 'votre vérifiction d\'adresse a échouer')
         return render(request,'all/index.html',{'msg':messages.get_messages(request)})
+        
+        
 class Signin(APIView):
     def post(self,request):
         username = request.data.get('username')
@@ -216,8 +221,19 @@ class Signin(APIView):
             my_user = User.objects.get(username=username)
             if user is not None:
                 login(request, user)
-                firstname = user.first_name
-                return Response({'msg': 'Connexion reuissie.'},status=status.HTTP_201_CREATED)
+                prenom = user.first_name
+                nom = user.last_name
+                email = user.email
+                username = user.username
+                context={
+                	'msg': 'Connexion reuissie.',
+                	'username':username,
+                	'email':email,
+                	'prenom':prenom,
+                	'nom':nom
+                }
+                
+                return Response(context,status=status.HTTP_201_CREATED)
 
             elif my_user.is_active == False:
                 return Response({'error':"Vous n'avez pas encore vérifier l'email"},status=status.HTTP_400_BAD_REQUEST)
